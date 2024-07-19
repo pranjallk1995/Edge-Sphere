@@ -10,31 +10,27 @@ class Sphere():
     """ class to define a sphere about origin """
 
     def __init__(self) -> None:
+        self.theta = np.arange(start=0, stop=2*np.pi, step=0.3)
+        self.phi = np.arange(start=0, stop=2*np.pi, step=0.3)
 
-        self.x = np.arange(start=cfg.X_MIN, stop=cfg.X_MAX+1, step=cfg.X_STEP)
-        self.y = np.arange(start=cfg.Y_MIN, stop=cfg.Y_MAX+1, step=cfg.Y_STEP)
+        self.x_values = []
+        self.y_values = []
+        self.z_values = []
 
-        x_grid = np.asarray([x for x in self.x for _ in self.y])
-        self.x_values = np.concatenate([x_grid, x_grid])
-
-        y_grid = np.asarray([y for _ in self.x for y in self.y])
-        self.y_values = np.concatenate([y_grid, y_grid])
-
-        z_grid = np.asarray(
-            [
-                np.sqrt(np.square(cfg.RADIUS) - (np.square(x) + np.square(y))) \
-                    if np.square(x) + np.square(y) < np.square(cfg.RADIUS) else np.nan \
-                        for x in self.x for y in self.y
-            ]
-        )
-        self.z_values = np.concatenate([z_grid, -z_grid])
+    def make_sphere(self) -> None:
+        """ function to generate points on the required sphere """
+        for theta in self.theta:
+            for phi in self.phi:
+                self.x_values.append(np.square(cfg.RADIUS)*np.cos(theta)*np.cos(phi))
+                self.y_values.append(np.square(cfg.RADIUS)*np.sin(theta)*np.cos(phi))
+                self.z_values.append(cfg.RADIUS*np.sin(phi))
 
     def get_sphere(self):
         """ function to return sphere data-points """
         return {
-            "x_values": self.x_values,
-            "y_values": self.y_values,
-            "z_values": self.z_values 
+            "x_values": np.asarray(self.x_values),
+            "y_values": np.asarray(self.y_values),
+            "z_values": np.asarray(self.z_values) 
         }
 
 class Animate():
@@ -85,5 +81,6 @@ class Plot():
 if __name__ == "__main__":
 
     sphere_obj = Sphere()
+    sphere_obj.make_sphere()
     plot_obj = Plot(sphere_obj.get_sphere())
     plot_obj.run()
