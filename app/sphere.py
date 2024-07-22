@@ -128,7 +128,8 @@ class Plot():
         for edge_x, edge_y, edge_z in self.edges:
             edges_trace.append(
                 go.Scatter3d(
-                    x=edge_x, y=edge_y, z=edge_z, mode="lines", marker={"color": "#FFECA1"}
+                    x=edge_x, y=edge_y, z=edge_z, mode="lines",
+                    marker={"color": cfg.EDGE_COLOR}, opacity=0.3
                 )
             )
         return edges_trace
@@ -140,7 +141,7 @@ class Plot():
             x=self.sphere_data["x_values"],
             y=self.sphere_data["y_values"],
             z=self.sphere_data["z_values"],
-            mode="markers", name="3D Sphere",
+            mode="markers", name="3D Sphere", opacity=0.6,
             marker={"color": cfg.COLOR, "size": cfg.MARKER_SIZE}
         )
 
