@@ -2,9 +2,9 @@
 
 import numpy as np
 import config as cfg
-import tensorflow as tf
+import plotly.graph_objs as go
 
-import plotly.graph_objs as go 
+from plotly import subplots
 
 class Sphere():
     """ class to define a sphere about origin """
@@ -37,7 +37,7 @@ class Sphere():
                 self.y_values.append(y_value)
                 self.z_values.append(z_value)
 
-    def get_sphere(self):
+    def get_sphere(self) -> dict:
         """ function to return sphere data-points """
 
         return {
@@ -48,12 +48,14 @@ class Sphere():
 
     def get_next_angle(self, angle: float) -> float:
         """ function to get next angle """
+
         if angle + cfg.ANGLE_STEP < 2*np.pi:
             return angle + cfg.ANGLE_STEP
         return 0
 
     def get_previous_angle(self, angle: float) -> float:
         """ function to get previous angle """
+
         if angle - cfg.ANGLE_STEP >= 0:
             return angle - cfg.ANGLE_STEP
         return np.floor(2*np.pi)
@@ -74,6 +76,7 @@ class Sphere():
 
     def get_adjacent_points(self, x: float, y: float, z: float) -> list:
         """ function to get closest existing point """
+
         return np.asarray(
             [
                 self.x_values[np.argmin(np.abs(self.x_values - x))],
@@ -82,7 +85,7 @@ class Sphere():
             ]
         )
 
-    def get_adjacents(self) -> list:
+    def get_adjacents(self) -> np.ndarray:
         """ function to find adjacent edges on the sphere """
 
         edges = []
@@ -110,15 +113,33 @@ class Sphere():
                 )
         return np.asarray(edges)
 
-class Animate():
-    pass
+    def get_frame_points(self) -> list:
+        """ function to rotate sphere along z-axis """
+
+        aniamtion_frames = []
+        phis = self.phi
+        rotations = np.arange(start=0, stop=1, step=cfg.ANIMATION_STEP)
+        for rotation in rotations:
+            thetas = self.theta + rotation
+            sphere_x = []
+            sphere_y = []
+            sphere_z = []
+            for theta in thetas:
+                for phi in phis:
+                    x_value, y_value, z_value = self.get_sphere_points(theta, phi)
+                    sphere_x.append(x_value)
+                    sphere_y.append(y_value)
+                    sphere_z.append(z_value)
+            aniamtion_frames.append([sphere_x, sphere_y, sphere_z])
+        return aniamtion_frames
 
 class Plot():
     """ class to plot the given sphere and its animations """
 
-    def __init__(self, sphere_data: dict, adjacent_points: dict) -> None:
+    def __init__(self, sphere_data: dict, adjacent_points: dict, animation_frames: list) -> None:
         self.sphere_data = sphere_data
         self.edges = adjacent_points
+        self.animation_frames = animation_frames
         self.figure = None
 
     def plot_edges(self) -> list:
@@ -134,35 +155,71 @@ class Plot():
             )
         return edges_trace
 
-    def plot_sphere(self) -> go.Figure:
+    def plot_sphere(self) -> list:
         """ function to plot the scatter 3d plotly figure """
 
-        return go.Scatter3d(
-            x=self.sphere_data["x_values"],
-            y=self.sphere_data["y_values"],
-            z=self.sphere_data["z_values"],
-            mode="markers", name="3D Sphere", opacity=0.6,
-            marker={"color": cfg.COLOR, "size": cfg.MARKER_SIZE}
-        )
+        return [
+            go.Scatter3d(
+                x=self.sphere_data["x_values"],
+                y=self.sphere_data["y_values"],
+                z=self.sphere_data["z_values"],
+                mode="markers", name="3D Sphere", opacity=0.6,
+                marker={"color": cfg.COLOR, "size": cfg.MARKER_SIZE}
+            )
+        ]
 
     def update_plot(self) -> None:
         """ function to set 3D scene properties """
 
         self.figure.update_layout(
-            template="plotly_dark", title="Sphere Animation",
+            title="Sphere Animation",
             scene={
                 "xaxis": {"title": "X-axis"},
                 "yaxis": {"title": "Y-axis"},
                 "zaxis": {"title": "Z-axis"}
             },
-            showlegend=False
+            showlegend=False,
+            updatemenus=[
+                {
+                    "type": "buttons", "buttons":[
+                        {
+                            "label": "Animate", "method":"animate",
+                            "args":[
+                                None,
+                                {
+                                    "frame": {"duration": 10},
+                                    "transition": {"duration": 100}
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ]
         )
+
+    def animate(self) -> None:
+        """ function to get animation frames """
+
+        frames = []
+        for frame in self.animation_frames:
+            frames.append(
+                go.Frame(
+                    data=[
+                        go.Scatter3d(
+                            x=frame[0], y=frame[1], z=frame[2],
+                            mode="markers", name="3D Sphere", opacity=0.6,
+                            marker={"color": cfg.COLOR, "size": cfg.MARKER_SIZE}
+                        )
+                    ]
+                )
+            )
+        return frames
 
     def run(self) -> None:
         """ class entry point """
 
         self.figure = go.Figure(
-            [self.plot_sphere()] + self.plot_edges()
+            data=self.plot_sphere(), frames=self.animate()
         )
         self.update_plot()
         self.figure.write_html("Animated Sphere.html")
@@ -171,5 +228,7 @@ if __name__ == "__main__":
 
     sphere_obj = Sphere()
     sphere_obj.make_sphere()
-    plot_obj = Plot(sphere_obj.get_sphere(), sphere_obj.get_adjacents())
+    plot_obj = Plot(
+        sphere_obj.get_sphere(), sphere_obj.get_adjacents(), sphere_obj.get_frame_points()
+    )
     plot_obj.run()
