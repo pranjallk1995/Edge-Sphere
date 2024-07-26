@@ -118,7 +118,7 @@ class Sphere():
 
         aniamtion_frames = []
         phis = self.phi
-        rotations = np.arange(start=0, stop=1, step=cfg.ANIMATION_STEP)
+        rotations = np.arange(start=0, stop=10, step=cfg.ANIMATION_STEP)
         for rotation in rotations:
             thetas = self.theta + rotation
             sphere_x = []
@@ -188,7 +188,8 @@ class Plot():
                                 None,
                                 {
                                     "frame": {"duration": 10},
-                                    "transition": {"duration": 100}
+                                    "transition": {"duration": 1000},
+                                    "mode": "animate"
                                 }
                             ]
                         }
@@ -222,7 +223,7 @@ class Plot():
             data=self.plot_sphere(), frames=self.animate()
         )
         self.update_plot()
-        self.figure.write_html("Animated Sphere.html")
+        self.figure.write_html("Animated Sphere.html", auto_play=False)
 
 if __name__ == "__main__":
 
