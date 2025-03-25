@@ -13,20 +13,20 @@ services:
       - ./app:/app
     ports:
       - 15050:5000
-    deploy:
-      resources:
-        reservations:
-          devices:
-            - driver: nvidia
-              count: 1
-              capabilities: [gpu]
-    healthcheck:
-      test: nvidia-smi
-      interval: 5s
-      timeout: 5s
-      retries: 3
-    # command: ["python3", "-m", "sphere"]
-    command: sleep infinity
+#    deploy:
+#      resources:
+#        reservations:
+#          devices:
+#            - driver: nvidia
+#              count: 1
+#              capabilities: [gpu]
+#    healthcheck:
+#      test: nvidia-smi
+#      interval: 5s
+#      timeout: 5s
+#      retries: 3
+    command: ["python3", "-m", "sphere"]
+    # command: sleep infinity
 
 networks:
   sphere-network:
